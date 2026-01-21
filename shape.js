@@ -70,6 +70,51 @@ function lightenEmotionColor(hex, lightenAmount = 0.92) {
     return `rgb(${r}, ${g}, ${b})`;
 }
 
+// FIX 1: Better cursor placement handling
+input.addEventListener('focus', function() {
+    // Clear any phantom content
+    if (!this.textContent || this.textContent.trim() === '') {
+        this.textContent = '';
+        this.innerHTML = '';
+    }
+    
+    // Place cursor at the start
+    const range = document.createRange();
+    const sel = window.getSelection();
+    
+    if (this.childNodes.length === 0) {
+        // If completely empty, add a text node
+        this.appendChild(document.createTextNode(''));
+    }
+    
+    range.setStart(this.childNodes[0], 0);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+});
+
+input.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+        e.preventDefault();
+
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+        
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        
+        const tabSpaces = document.createTextNode('    ');
+        range.insertNode(tabSpaces);
+        
+        range.setStartAfter(tabSpaces);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        
+        this.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+});
+
 
 
 // Perlin noise implementation
@@ -410,9 +455,12 @@ class ParticleSystem {
 }
 
 let particleSystem;
-
 input.addEventListener('input', function() {
-    const text = this.value;
+    const text = this.textContent;
+
+    if (window.colorKeywordsEnabled && window.colorKeywordsEnabled()) {
+        window.highlightEmotionWords();
+    }
 
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
@@ -432,7 +480,6 @@ input.addEventListener('input', function() {
             particleSystem.setEmotion(emotion);
         }
     } else {
-
         input.style.outline = 'none';
         input.style.boxShadow = 'none';
         
@@ -451,7 +498,7 @@ input.addEventListener('input', function() {
     if (!hasStartedTyping && text.length > 0) {
         hasStartedTyping = true;
         
-        input.placeholder = '';
+        this.dataset.placeholder = '';
         intro.style.opacity = '0';
         
         setTimeout(() => {

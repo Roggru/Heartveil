@@ -73,14 +73,29 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 1.1rem;
     padding: 1rem;
-    resize: none;
-
+    
     min-height: 50px;
     max-height: 400px;
-    overflow-y: auto;}
-#input::placeholder {
-    text-align: center;
-    opacity: 0.5;}
+    overflow-y: auto;
+    
+    outline: none;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    cursor: text;}
+
+#input:empty:before {
+    content: attr(data-placeholder);
+    color: rgba(255, 255, 255, 0.5);
+    pointer-events: none;}
+
+#input:focus:before {
+    content: none;}
+
+    .emotion-word {
+        display: inline;
+        transition: color 0.8s ease;}
+    .emotion-word.no-transition {
+       transition: none;}
 
 
 

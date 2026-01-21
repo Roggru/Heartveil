@@ -130,7 +130,7 @@ const emotions = {
             'okay', 'fine', 'pleasant', 'comfortable',
             'content', 'contented', 'contentment',
             'satisfied', 'satisfaction',
-            'relieved', 'relief',
+            'relieved', 'relief', 'good',
             'lighthearted', 'at ease', 'serene'
         ],
         color: '#E6EE9C',
@@ -338,7 +338,7 @@ const emotions = {
             'impatient', 'impatience',
             'agitated', 'agitation'
         ],
-        color: '#ff5343',
+        color: '#ff7543',
         
         intensity: 4,
         brightness: 0.4,
@@ -373,7 +373,7 @@ const emotions = {
             'enraged', 'rage',
             'fury', 'livid',
             'wrathful', 'wrath',
-            'seething',
+            'seething', 'hatred',
             'vengeful', 'vengeance',
             'betrayed', 'malice',
             'malicious'
@@ -589,7 +589,7 @@ const emotions = {
     shame_low: {
         roots: ['embarrassment'],
         keywords: [
-            'awkward',
+            'awkward', 'bad',
             'self-conscious',
             'embarrassed', 'embarrassment'
         ],
