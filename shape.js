@@ -54,6 +54,21 @@ function smoothResize() {
     }
 }
 
+function lightenEmotionColor(hex, lightenAmount = 0.92) {
+    hex = hex.replace('#', '');
+    
+    let r = parseInt(hex.substring(0, 2), 16);
+    let g = parseInt(hex.substring(2, 4), 16);
+    let b = parseInt(hex.substring(4, 6), 16);
+    
+    const bgR = 25, bgG = 25, bgB = 25;
+    
+    r = Math.round(bgR + (r - bgR) * (1 - lightenAmount));
+    g = Math.round(bgG + (g - bgG) * (1 - lightenAmount));
+    b = Math.round(bgB + (b - bgB) * (1 - lightenAmount));
+    
+    return `rgb(${r}, ${g}, ${b})`;
+}
 
 
 
@@ -326,60 +341,67 @@ class ParticleSystem {
     }
 
     update() {
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    
-    this.time += this.zOffInc;
-    
-    let yoff = 0;
-    for (let y = 0; y < this.rows; y++) {
-        let xoff = 0;
-        for (let x = 0; x < this.cols; x++) {
-            let index = x + y * this.cols;
-            
-            let n1 = this.noise.get(
-                xoff + this.seeds.flow1 + this.time,
-                yoff + this.seeds.flow1 + this.time
-            );
-            
-            let n2 = this.noise.get(
-                xoff * 2 + this.seeds.flow2 + this.time * 0.7,
-                yoff * 2 + this.seeds.flow2 + this.time * 0.7
-            );
-            
-            let angle = (n1 * 2 + n2 * 0.5) * Math.PI * 2;
-            angle -= 0.05;
-            
-            let v = {
-                x: Math.cos(angle),
-                y: Math.sin(angle)
-            };
-            
-            this.flowfield[index] = v;
-            xoff += this.inc;
+        if (window.updateFPS) {
+            window.updateFPS();
         }
-        yoff += this.inc;
-    }
-    
-    for (let i = this.particles.length - 1; i >= 0; i--) {
-        let particle = this.particles[i];
         
-        particle.follow(this.flowfield, this.cols, this.scl);
-        particle.update();
-        particle.edges();
-        particle.show(this.ctx);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        if (particle.isDead()) {
-            this.particles.splice(i, 1);
+        this.time += this.zOffInc;
+        
+        let yoff = 0;
+        for (let y = 0; y < this.rows; y++) {
+            let xoff = 0;
+            for (let x = 0; x < this.cols; x++) {
+                let index = x + y * this.cols;
+                
+                let n1 = this.noise.get(
+                    xoff + this.seeds.flow1 + this.time,
+                    yoff + this.seeds.flow1 + this.time
+                );
+                
+                let n2 = this.noise.get(
+                    xoff * 2 + this.seeds.flow2 + this.time * 0.7,
+                    yoff * 2 + this.seeds.flow2 + this.time * 0.7
+                );
+                
+                let angle = (n1 * 2 + n2 * 0.5) * Math.PI * 2;
+                angle -= 0.05;
+                
+                let v = {
+                    x: Math.cos(angle),
+                    y: Math.sin(angle)
+                };
+                
+                this.flowfield[index] = v;
+                xoff += this.inc;
+            }
+            yoff += this.inc;
         }
-    }
-    
-    const targetCount = Math.floor(this.baseNumbPart * this.currentEmotion.spawnRate);
-    
-    while (this.particles.length < targetCount) {
-        this.particles.push(new Particle(this.canvas, this.currentEmotion));
-    }
+        
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            let particle = this.particles[i];
+            
+            particle.follow(this.flowfield, this.cols, this.scl);
+            particle.update();
+            particle.edges();
+            particle.show(this.ctx);
+            
+            if (particle.isDead()) {
+                this.particles.splice(i, 1);
+            }
+        }
+        
+        const targetCount = Math.floor(this.baseNumbPart * this.currentEmotion.spawnRate);
 
-    requestAnimationFrame(() => this.update());
+        if (this.particles.length < targetCount) {
+            const spawnCount = Math.min(10, targetCount - this.particles.length);
+            for (let i = 0; i < spawnCount; i++) {
+                this.particles.push(new Particle(this.canvas, this.currentEmotion));
+            }
+        }
+
+        requestAnimationFrame(() => this.update());
     }
 
     start() {
@@ -400,17 +422,27 @@ input.addEventListener('input', function() {
     if (text.length > 0) {
         const emotion = analyzeText(text);
         
+        if (emotion && emotion.color) {
+            input.style.transition = 'outline 0.6s ease, box-shadow 0.6s ease';
+            input.style.outline = `2px solid ${lightenEmotionColor(emotion.color, 0.7)}`;
+            input.style.boxShadow = `0 0 10px ${lightenEmotionColor(emotion.color, 0.85)}`;
+        }
+        
         if (particleSystem) {
             particleSystem.setEmotion(emotion);
         }
     } else {
+
+        input.style.outline = 'none';
+        input.style.boxShadow = 'none';
+        
         if (particleSystem) {
             particleSystem.setEmotion({
                 color: '#C8C8C8',
-                brightness: 0.4,
-                speed: 0.5,
+                brightness: 0.3,
+                speed: 0.2,
                 size: 2,
-                spawnRate: 1
+                spawnRate: 0.1
             });
         }
         lastScrollHeight = 50;

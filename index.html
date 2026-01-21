@@ -11,6 +11,26 @@
     <div class="canvas">
         <canvas id="space" class="space"></canvas>
 
+        <div class="bar">
+            <button class="settings" id="settingsBtn">
+                <img src="menu.png" alt="Settings">
+            </button>
+
+            <div class="dropdown" id="dropdown">
+                <div class="dropdown-item">
+                    <label class="toggle-container">
+                        <span>FPS Counter</span>
+                        <input type="checkbox" id="fpsToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div id="fpsCounter" class="fps-counter" style="display: none;">0 FPS</div>
+
+
+
         <div class="box">
             <div class="intro">
                 <h1>Hello</h1>
@@ -24,8 +44,10 @@
 
     </div>
 
-<script src="shape.js"></script>
+<script src="settings.js"></script>
+<script src="behaviors.js"></script>
 <script src="canvas.js"></script>
+<script src="shape.js"></script>
 </body>
 
 </html>

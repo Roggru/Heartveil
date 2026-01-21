@@ -138,18 +138,20 @@ const emotions = {
         intensity: 2,
         brightness: 0.4,
         speed: 0.15,
-        spawnRate: 0.15
+        spawnRate: 0.15,
+
+        trail: TrailPresets.none
     },
 
     joy_medium: {
         roots: ['happiness'],
         keywords: [
             'happy', 'happier', 'happiest',
-            'happiness',
+            'happiness', 'joyous',
+            'joyful', 'joyfulness',
             'cheerful', 'cheerfulness',
             'glad', 'delighted', 'delight',
             'pleased', 'pleasure',
-            'joyful', 'joyfulness',
             'warm', 'warmth', 'joy',
             'optimistic'
         ],
@@ -158,7 +160,9 @@ const emotions = {
         intensity: 5,
         brightness: 0.6,
         speed: 0.3,
-        spawnRate: 0.3
+        spawnRate: 0.3,
+        
+        trail: TrailPresets.none
     },
 
     joy_high: {
@@ -169,14 +173,17 @@ const emotions = {
             'exuberant', 'exuberance',
             'thrilled', 'thrill',
             'blissful', 'bliss',
-            'excited', 'excitement'
+            'excited', 'excitement',
+            'overjoyed'
         ],
         color: '#FF8F00',
         
         intensity: 8,
         brightness: 0.8,
         speed: 1,
-        spawnRate: 0.5
+        spawnRate: 0.5,
+        
+        trail: TrailPresets.none
     },
 
     joy_fast:{
@@ -189,7 +196,9 @@ const emotions = {
         intensity: 9,
         brightness: 0.9,
         speed: 2,
-        spawnRate: 0.7
+        spawnRate: 0.7,
+        
+        trail: TrailPresets.none
     },
 
     // ======================
@@ -208,7 +217,9 @@ const emotions = {
         intensity: 3,
         brightness: 0.4,
         speed: 0.1,
-        spawnRate: 0.2
+        spawnRate: 0.2,
+        
+        trail: TrailPresets.none
     },
 
     love_medium: {
@@ -228,7 +239,9 @@ const emotions = {
         intensity: 6,
         brightness: 0.7,
         speed: 0.1,
-        spawnRate: 0.3
+        spawnRate: 0.3,
+        
+        trail: TrailPresets.none
     },
 
     love_high: {
@@ -246,7 +259,9 @@ const emotions = {
         intensity: 9,
         brightness: 1,
         speed: 0.1,
-        spawnRate: 0.35
+        spawnRate: 0.35,
+        
+        trail: TrailPresets.none
     },
 
     // ======================
@@ -266,7 +281,9 @@ const emotions = {
         intensity: 3,
         brightness: 0.3,
         speed: 0.1,
-        spawnRate: 0.1
+        spawnRate: 0.1,
+        
+        trail: TrailPresets.none
     },
 
     sadness_medium: {
@@ -285,7 +302,9 @@ const emotions = {
         intensity: 6,
         brightness: 0.4,
         speed: 0.3,
-        spawnRate: 0.2
+        spawnRate: 0.2,
+        
+        trail: TrailPresets.none
     },
 
     sadness_high: {
@@ -302,7 +321,9 @@ const emotions = {
         intensity: 9,
         brightness: 0.8,
         speed: 0.3,
-        spawnRate: 0.25
+        spawnRate: 0.25,
+        
+        trail: TrailPresets.none
     },
 
     // ======================
@@ -322,7 +343,9 @@ const emotions = {
         intensity: 4,
         brightness: 0.4,
         speed: 0.1,
-        spawnRate: 0.1
+        spawnRate: 0.1,
+        
+        trail: TrailPresets.none
     },
 
     anger_medium: {
@@ -339,7 +362,9 @@ const emotions = {
         intensity: 6,
         brightness: 0.7,
         speed: 0.4,
-        spawnRate: 0.3
+        spawnRate: 0.3,
+        
+        trail: TrailPresets.none
     },
 
     anger_high: {
@@ -358,7 +383,9 @@ const emotions = {
         intensity: 9,
         brightness: 1,
         speed: 1,
-        spawnRate: 1
+        spawnRate: 1,
+        
+        trail: TrailPresets.none
     },
 
     anger_fast:{
@@ -371,7 +398,9 @@ const emotions = {
         intensity: 10,
         brightness: 1,
         speed: 5,
-        spawnRate: 0.4
+        spawnRate: 0.4,
+        movement: 'erratic',
+        trail: TrailPresets.none
     },
 
 
@@ -391,7 +420,9 @@ const emotions = {
         intensity: 4,
         brightness: 0.4,
         speed: 1,
-        spawnRate: 0.02
+        spawnRate: 0.02,
+        movement: 'floating',
+        trail: TrailPresets.none
     },
 
     fear_medium: {
@@ -409,7 +440,9 @@ const emotions = {
         intensity: 7,
         brightness: 0.6,
         speed: 1.2,
-        spawnRate: 0.05
+        spawnRate: 0.05,
+        
+        trail: TrailPresets.none
     },
 
     fear_high: {
@@ -427,7 +460,9 @@ const emotions = {
         intensity: 10,
         brightness: 1,
         speed: 3,
-        spawnRate: 0.05
+        spawnRate: 0.05,
+        
+        trail: TrailPresets.none
     },
 
     // ======================
@@ -446,7 +481,9 @@ const emotions = {
         intensity: 4,
         brightness: 0.4,
         speed: 0.3,
-        spawnRate: 0.03
+        spawnRate: 0.03,
+        
+        trail: TrailPresets.none
     },
 
     anxiety_medium: {
@@ -463,7 +500,9 @@ const emotions = {
         intensity: 6,
         brightness: 0.6,
         speed: 0.4,
-        spawnRate: 0.08
+        spawnRate: 0.08,
+        
+        trail: TrailPresets.none
     },
 
     anxiety_high: {
@@ -479,9 +518,11 @@ const emotions = {
         color: '#6A1B9A',
        
         intensity: 9,
-        brightness: 0.8,
+        brightness: 1,
         speed: 2.5,
-        spawnRate: 0.5
+        spawnRate: 0.5,
+        movement: 'erratic',
+        trail: TrailPresets.none
     },
 
     // ======================
@@ -499,7 +540,9 @@ const emotions = {
         intensity: 3,
         brightness: 0.5,
         speed: 0.8,
-        spawnRate: 0.06
+        spawnRate: 0.06,
+        
+        trail: TrailPresets.none
     },
 
     surprise_medium: {
@@ -516,7 +559,9 @@ const emotions = {
         intensity: 6,
         brightness: 0.7,
         speed: 0.5,
-        spawnRate: 0.08
+        spawnRate: 0.08,
+        
+        trail: TrailPresets.none
     },
 
     surprise_high: {
@@ -533,7 +578,9 @@ const emotions = {
         intensity: 8,
         brightness: 0.9,
         speed: 0.2,
-        spawnRate: 0.5
+        spawnRate: 0.5,
+        
+        trail: TrailPresets.none
     },
 
     // ======================
@@ -551,7 +598,9 @@ const emotions = {
         intensity: 4,
         brightness: 0.4,
         speed: 0.01,
-        spawnRate: 0.5
+        spawnRate: 0.5,
+        
+        trail: TrailPresets.none
     },
 
     shame_medium: {
@@ -567,7 +616,9 @@ const emotions = {
         intensity: 6,
         brightness: 0.4,
         speed: 0.03,
-        spawnRate: 0.5
+        spawnRate: 0.5,
+        
+        trail: TrailPresets.none
     },
 
     shame_high: {
@@ -583,7 +634,9 @@ const emotions = {
         intensity: 9,
         brightness: 0.5,
         speed: 0.04,
-        spawnRate: 0.5
+        spawnRate: 0.5,
+        
+        trail: TrailPresets.none
     },
 
     // ======================
@@ -604,6 +657,8 @@ const emotions = {
         intensity: 1,
         brightness: 0.4,
         speed: 1,
-        spawnRate: 0.5
+        spawnRate: 0.5,
+        
+        trail: TrailPresets.none
     }
 };
