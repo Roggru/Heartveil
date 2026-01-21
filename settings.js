@@ -49,6 +49,56 @@ window.updateFPS = updateFPS;
 
 
 
+// COLOR TEXTBOX
+const textboxToggle = document.getElementById('textboxToggle');
+let colorTextboxEnabled = true;
+
+textboxToggle.addEventListener('change', (e) => {
+    colorTextboxEnabled = e.target.checked;
+    
+    if (!colorTextboxEnabled) {
+        const inputDiv = document.getElementById('input');
+        inputDiv.style.outline = 'none';
+        inputDiv.style.boxShadow = 'none';
+    }
+});
+
+function updateTextboxColor(emotion) {
+    if (!colorTextboxEnabled) return;
+    
+    const inputDiv = document.getElementById('input');
+    
+    if (emotion && emotion.color) {
+        const lightenEmotionColor = (hex, lightenAmount = 0.92) => {
+            hex = hex.replace('#', '');
+            
+            let r = parseInt(hex.substring(0, 2), 16);
+            let g = parseInt(hex.substring(2, 4), 16);
+            let b = parseInt(hex.substring(4, 6), 16);
+            
+            const bgR = 25, bgG = 25, bgB = 25;
+            
+            r = Math.round(bgR + (r - bgR) * (1 - lightenAmount));
+            g = Math.round(bgG + (g - bgG) * (1 - lightenAmount));
+            b = Math.round(bgB + (b - bgB) * (1 - lightenAmount));
+            
+            return `rgb(${r}, ${g}, ${b})`;
+        };
+        
+        inputDiv.style.transition = 'outline 0.6s ease, box-shadow 0.6s ease';
+        inputDiv.style.outline = `2px solid ${lightenEmotionColor(emotion.color, 0.7)}`;
+        inputDiv.style.boxShadow = `0 0 10px ${lightenEmotionColor(emotion.color, 0.85)}`;
+    } else {
+        inputDiv.style.outline = 'none';
+        inputDiv.style.boxShadow = 'none';
+    }
+}
+
+window.colorTextboxEnabled = () => colorTextboxEnabled;
+window.updateTextboxColor = updateTextboxColor;
+
+
+
 // COLOR KEYWORDS
 const colorToggle = document.getElementById('colorToggle');
 let colorKeywordsEnabled = false;

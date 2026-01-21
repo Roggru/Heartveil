@@ -54,22 +54,6 @@ function smoothResize() {
     }
 }
 
-function lightenEmotionColor(hex, lightenAmount = 0.92) {
-    hex = hex.replace('#', '');
-    
-    let r = parseInt(hex.substring(0, 2), 16);
-    let g = parseInt(hex.substring(2, 4), 16);
-    let b = parseInt(hex.substring(4, 6), 16);
-    
-    const bgR = 25, bgG = 25, bgB = 25;
-    
-    r = Math.round(bgR + (r - bgR) * (1 - lightenAmount));
-    g = Math.round(bgG + (g - bgG) * (1 - lightenAmount));
-    b = Math.round(bgB + (b - bgB) * (1 - lightenAmount));
-    
-    return `rgb(${r}, ${g}, ${b})`;
-}
-
 input.addEventListener('focus', function() {
     if (!this.textContent || this.textContent.trim() === '') {
         this.textContent = '';
@@ -98,7 +82,7 @@ input.addEventListener('keydown', function(e) {
         
         const range = selection.getRangeAt(0);
         range.deleteContents();
-        
+
         const tabSpaces = document.createTextNode('	');
         range.insertNode(tabSpaces);
         
@@ -466,18 +450,17 @@ input.addEventListener('input', function() {
     if (text.length > 0) {
         const emotion = analyzeText(text);
         
-        if (emotion && emotion.color) {
-            input.style.transition = 'outline 0.6s ease, box-shadow 0.6s ease';
-            input.style.outline = `2px solid ${lightenEmotionColor(emotion.color, 0.7)}`;
-            input.style.boxShadow = `0 0 10px ${lightenEmotionColor(emotion.color, 0.85)}`;
+        if (window.updateTextboxColor) {
+            window.updateTextboxColor(emotion);
         }
         
         if (particleSystem) {
             particleSystem.setEmotion(emotion);
         }
     } else {
-        input.style.outline = 'none';
-        input.style.boxShadow = 'none';
+        if (window.updateTextboxColor) {
+            window.updateTextboxColor(null);
+        }
         
         if (particleSystem) {
             particleSystem.setEmotion({
