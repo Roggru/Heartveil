@@ -70,20 +70,16 @@ function lightenEmotionColor(hex, lightenAmount = 0.92) {
     return `rgb(${r}, ${g}, ${b})`;
 }
 
-// FIX 1: Better cursor placement handling
 input.addEventListener('focus', function() {
-    // Clear any phantom content
     if (!this.textContent || this.textContent.trim() === '') {
         this.textContent = '';
         this.innerHTML = '';
     }
     
-    // Place cursor at the start
     const range = document.createRange();
     const sel = window.getSelection();
     
     if (this.childNodes.length === 0) {
-        // If completely empty, add a text node
         this.appendChild(document.createTextNode(''));
     }
     
@@ -103,7 +99,7 @@ input.addEventListener('keydown', function(e) {
         const range = selection.getRangeAt(0);
         range.deleteContents();
         
-        const tabSpaces = document.createTextNode('    ');
+        const tabSpaces = document.createTextNode('	');
         range.insertNode(tabSpaces);
         
         range.setStartAfter(tabSpaces);

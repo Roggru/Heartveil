@@ -97,7 +97,6 @@ function highlightEmotionWords() {
     const completedText = beforeCursor.substring(0, lastBreakIndex + 1);
     const currentWord = beforeCursor.substring(lastBreakIndex + 1);
     
-rd
     if (completedText === lastCompletedText) {
         return;
     }
