@@ -8,6 +8,66 @@ let hasStartedTyping = false;
 let resizeTimeout;
 let lastScrollHeight = 50;
 
+// TYPING FLOW AGITATION
+class TypingFlowController {
+    constructor() {
+        this.baseSpeedMultiplier = 1.0;
+        this.targetSpeedMultiplier = 1.0;
+        this.currentSpeedMultiplier = 1.0;
+        
+        this.baseSpawnMultiplier = 1.0;
+        this.targetSpawnMultiplier = 1.0;
+        this.currentSpawnMultiplier = 1.0;
+        
+        this.decayRate = 0.995;
+        this.smoothing = 0.08;
+        
+        this.lastKeystrokeTime = 0;
+        this.keystrokeDecayTime = 200;
+    }
+    
+    onKeystroke() {
+        this.lastKeystrokeTime = Date.now();
+        this.targetSpeedMultiplier = 1.5;
+        this.targetSpawnMultiplier = 2;
+    }
+    
+    update() {
+        const now = Date.now();
+        const timeSinceKeystroke = now - this.lastKeystrokeTime;
+        
+        if (timeSinceKeystroke > this.keystrokeDecayTime) {
+            this.targetSpeedMultiplier = this.baseSpeedMultiplier;
+            this.targetSpawnMultiplier = this.baseSpawnMultiplier;
+        }
+        
+        this.currentSpeedMultiplier += (this.targetSpeedMultiplier - this.currentSpeedMultiplier) * this.smoothing;
+        this.currentSpawnMultiplier += (this.targetSpawnMultiplier - this.currentSpawnMultiplier) * this.smoothing;
+        
+        if (timeSinceKeystroke > this.keystrokeDecayTime) {
+            this.targetSpeedMultiplier *= this.decayRate;
+            this.targetSpawnMultiplier *= this.decayRate;
+            
+            if (this.targetSpeedMultiplier < this.baseSpeedMultiplier + 0.01) {
+                this.targetSpeedMultiplier = this.baseSpeedMultiplier;
+            }
+            if (this.targetSpawnMultiplier < this.baseSpawnMultiplier + 0.01) {
+                this.targetSpawnMultiplier = this.baseSpawnMultiplier;
+            }
+        }
+    }
+    
+    getSpeedMultiplier() {
+        return this.currentSpeedMultiplier;
+    }
+    
+    getSpawnMultiplier() {
+        return this.currentSpawnMultiplier;
+    }
+}
+
+const typingFlow = new TypingFlowController();
+
 function analyzeText(text) {
     const lowerText = text.toLowerCase();
     
@@ -107,9 +167,11 @@ input.addEventListener('keydown', function(e) {
         
         this.dispatchEvent(new Event('input', { bubbles: true }));
     }
+    
+    if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Delete' || e.key === 'Enter') {
+        typingFlow.onKeystroke();
+    }
 });
-
-
 
 class PerlinNoise {
     constructor() {
@@ -242,24 +304,25 @@ class Particle {
         }
     }
 
-    update() {
-        this.vel.x += this.acc.x;
-        this.vel.y += this.acc.y;
+    update(speedMultiplier = 1.0) {
+        // Apply speed multiplier to acceleration and velocity
+        this.vel.x += this.acc.x * speedMultiplier;
+        this.vel.y += this.acc.y * speedMultiplier;
         
         this.vel.x *= this.friction;
         this.vel.y *= this.friction;
         
         let magSq = this.vel.x * this.vel.x + this.vel.y * this.vel.y;
-        let maxSpeedSq = this.maxSpeed * this.maxSpeed;
+        let maxSpeedSq = (this.maxSpeed * speedMultiplier) * (this.maxSpeed * speedMultiplier);
         
         if (magSq > maxSpeedSq) {
             let mag = Math.sqrt(magSq);
-            this.vel.x = (this.vel.x / mag) * this.maxSpeed;
-            this.vel.y = (this.vel.y / mag) * this.maxSpeed;
+            this.vel.x = (this.vel.x / mag) * (this.maxSpeed * speedMultiplier);
+            this.vel.y = (this.vel.y / mag) * (this.maxSpeed * speedMultiplier);
         }
         
-        this.pos.x += this.vel.x;
-        this.pos.y += this.vel.y;
+        this.pos.x += this.vel.x * speedMultiplier;
+        this.pos.y += this.vel.y * speedMultiplier;
         
         this.pos.x += (Math.random() - 0.5) * 0.05;
         this.pos.y += (Math.random() - 0.5) * 0.05;
@@ -341,7 +404,7 @@ class ParticleSystem {
         
         this.scl = 40;
         this.inc = 0.03;
-        this.zOffInc = 0.0005;
+        this.zOffInc = 0.0005; // Base flow speed
         this.baseNumbPart = 1500;
         
         this.cols = Math.floor(this.canvas.width / this.scl);
@@ -420,8 +483,8 @@ class ParticleSystem {
         };
     }
 
-    updateFlowfield() {
-        this.time += this.zOffInc;
+    updateFlowfield(speedMultiplier = 1.0) {
+        this.time += this.zOffInc * speedMultiplier;
         
         let yoff = 0;
         for (let y = 0; y < this.rows; y++) {
@@ -456,12 +519,16 @@ class ParticleSystem {
         if (window.updateFPS) {
             window.updateFPS();
         }
+
+        typingFlow.update();
+        const speedMultiplier = typingFlow.getSpeedMultiplier();
+        const spawnMultiplier = typingFlow.getSpawnMultiplier();
         
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
         this.flowfieldUpdateCounter++;
         if (this.flowfieldUpdateCounter >= this.flowfieldUpdateFrequency) {
-            this.updateFlowfield();
+            this.updateFlowfield(speedMultiplier);
             this.flowfieldUpdateCounter = 0;
         }
         
@@ -469,7 +536,7 @@ class ParticleSystem {
             let particle = this.particles[i];
             
             particle.follow(this.flowfield, this.cols, this.scl);
-            particle.update();
+            particle.update(speedMultiplier);
             particle.edges();
             particle.show(this.ctx);
             
@@ -479,7 +546,9 @@ class ParticleSystem {
             }
         }
         
-        const targetCount = Math.floor(this.baseNumbPart * this.currentEmotion.spawnRate);
+        const baseTargetCount = Math.floor(this.baseNumbPart * this.currentEmotion.spawnRate);
+        const targetCount = Math.floor(baseTargetCount * spawnMultiplier);
+        
         if (this.particles.length < targetCount) {
             const spawnCount = Math.min(5, targetCount - this.particles.length);
             for (let i = 0; i < spawnCount; i++) {
@@ -561,16 +630,13 @@ input.addEventListener('input', function() {
 });
 
 function blendEmotionColorWithBackground(emotionColor, intensity = 0.10) {
-    // Parse emotion color
     const hex = emotionColor.replace('#', '');
     let r = parseInt(hex.substring(0, 2), 16);
     let g = parseInt(hex.substring(2, 4), 16);
     let b = parseInt(hex.substring(4, 6), 16);
     
-    // Background color RGB
     const bgR = 15, bgG = 15, bgB = 15; // #0f0f0f
     
-    // Blend emotion color with background (intensity controls how strong the tint is)
     r = Math.round(bgR + (r - bgR) * intensity);
     g = Math.round(bgG + (g - bgG) * intensity);
     b = Math.round(bgB + (b - bgB) * intensity);

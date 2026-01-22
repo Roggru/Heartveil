@@ -248,6 +248,83 @@ const emotions = {
     },
 
     // ======================
+    // ANGER / AGGRESSION
+    // ======================
+    anger_low: {
+        roots: ['annoyance'],
+        keywords: [
+            'annoyed', 'annoyance',
+            'irritated', 'irritation',
+            'bothered', 'grouchy',
+            'impatient', 'impatience',
+            'agitated', 'agitation'
+        ],
+        color: '#ff7543',
+        
+        intensity: 4,
+        brightness: 0.4,
+        speed: 0.25,
+        spawnRate: 0.1,
+        
+        trail: TrailPresets.none
+    },
+
+    anger_medium: {
+        roots: ['anger'],
+        keywords: [
+            'angry', 'anger',
+            'mad', 'hate',
+            'resentful', 'resentment',
+            'frustrated', 'frustration',
+            'indignant', 'indignation'
+        ],
+        color: '#E53935',
+        
+        intensity: 6,
+        brightness: 0.7,
+        speed: 0.4,
+        spawnRate: 0.3,
+        
+        trail: TrailPresets.none
+    },
+
+    anger_high: {
+        roots: ['rage'],
+        keywords: [
+            'enraged', 'rage',
+            'fury', 'livid',
+            'wrathful', 'wrath',
+            'seething', 'hatred',
+            'vengeful', 'vengeance',
+            'betrayed', 'malice',
+            'malicious'
+        ],
+        color: '#9e0000',
+        
+        intensity: 9,
+        brightness: 1,
+        speed: 1,
+        spawnRate: 1,
+        
+        trail: TrailPresets.none
+    },
+
+    anger_fast:{
+        keywords: [
+            'explosive', 'explode',
+            'furious', 'violent'
+        ],
+        color: '#ff2f00',
+
+        intensity: 10,
+        brightness: 1,
+        speed: 4.5,
+        spawnRate: 0.4,
+        movement: 'erratic',
+        trail: TrailPresets.none
+    },
+
+    // ======================
     // LOVE / ATTACHMENT
     // ======================
     love_low: {
@@ -371,84 +448,6 @@ const emotions = {
         
         trail: TrailPresets.none
     },
-
-    // ======================
-    // ANGER / AGGRESSION
-    // ======================
-    anger_low: {
-        roots: ['annoyance'],
-        keywords: [
-            'annoyed', 'annoyance',
-            'irritated', 'irritation',
-            'bothered', 'grouchy',
-            'impatient', 'impatience',
-            'agitated', 'agitation'
-        ],
-        color: '#ff7543',
-        
-        intensity: 4,
-        brightness: 0.4,
-        speed: 0.1,
-        spawnRate: 0.1,
-        
-        trail: TrailPresets.none
-    },
-
-    anger_medium: {
-        roots: ['anger'],
-        keywords: [
-            'angry', 'anger',
-            'mad', 'hate',
-            'resentful', 'resentment',
-            'frustrated', 'frustration',
-            'indignant', 'indignation'
-        ],
-        color: '#E53935',
-        
-        intensity: 6,
-        brightness: 0.7,
-        speed: 0.4,
-        spawnRate: 0.3,
-        
-        trail: TrailPresets.none
-    },
-
-    anger_high: {
-        roots: ['rage'],
-        keywords: [
-            'enraged', 'rage',
-            'fury', 'livid',
-            'wrathful', 'wrath',
-            'seething', 'hatred',
-            'vengeful', 'vengeance',
-            'betrayed', 'malice',
-            'malicious'
-        ],
-        color: '#9e0000',
-        
-        intensity: 9,
-        brightness: 1,
-        speed: 1,
-        spawnRate: 1,
-        
-        trail: TrailPresets.none
-    },
-
-    anger_fast:{
-        keywords: [
-            'explosive', 'explode',
-            'furious', 'violent'
-        ],
-        color: '#ff2f00',
-
-        intensity: 10,
-        brightness: 1,
-        speed: 5,
-        spawnRate: 0.4,
-        movement: 'erratic',
-        trail: TrailPresets.none
-    },
-
 
     // ======================
     // FEAR / THREAT
