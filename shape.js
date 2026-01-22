@@ -9,18 +9,32 @@ let resizeTimeout;
 let lastScrollHeight = 50;
 
 function analyzeText(text) {
-    const words = text.toLowerCase()
+    const lowerText = text.toLowerCase();
+    
+    const emotionScores = {};
+    
+    for (let [emotion, data] of Object.entries(emotions)) {
+        data.keywords.forEach(keyword => {
+            if (keyword.includes(' ')) {
+                if (lowerText.includes(keyword)) {
+                    emotionScores[emotion] = (emotionScores[emotion] || 0) + (data.intensity * 3);
+                }
+            }
+        });
+    }
+    
+    const words = lowerText
         .replace(/[.,!?;:"'()]/g, ' ')
         .split(/\s+/)
         .filter(word => word.length > 0);
     
-    const emotionScores = {};
-    
     words.forEach(word => {
         for (let [emotion, data] of Object.entries(emotions)) {
-            if (data.keywords.includes(word)) {
-                emotionScores[emotion] = (emotionScores[emotion] || 0) + data.intensity;
-            }
+            data.keywords.forEach(keyword => {
+                if (!keyword.includes(' ') && keyword === word) {
+                    emotionScores[emotion] = (emotionScores[emotion] || 0) + data.intensity;
+                }
+            });
         }
     });
     
@@ -82,7 +96,7 @@ input.addEventListener('keydown', function(e) {
         
         const range = selection.getRangeAt(0);
         range.deleteContents();
-
+        
         const tabSpaces = document.createTextNode('	');
         range.insertNode(tabSpaces);
         
@@ -164,13 +178,20 @@ class Particle {
             color: '#C8C8C8',
             brightness: 0.3,
             speed: 0.3,
-            size: 2
+            size: 2,
+            rainbow: false
         };
         
         this.baseColor = emotionData?.color || defaults.color;
         this.baseBrightness = emotionData?.brightness || defaults.brightness;
         this.maxSpeed = emotionData?.speed || defaults.speed;
         this.size = emotionData?.size || defaults.size;
+        this.rainbow = emotionData?.rainbow || defaults.rainbow;
+
+        if (this.rainbow) {
+            this.hueOffset = Math.random() * 360;
+            this.hueSpeed = 0.5;
+        }
         
         this.pos = {
             x: Math.random() * canvas.width,
@@ -231,6 +252,10 @@ class Particle {
         this.acc.x = 0;
         this.acc.y = 0;
         this.age++;
+        
+        if (this.rainbow) {
+            this.hueOffset = (this.hueOffset + this.hueSpeed) % 360;
+        }
     }
 
     edges() {
@@ -275,18 +300,25 @@ class Particle {
     show(ctx) {
         let alpha = this.getAlpha() * this.baseBrightness;
         
-        let r, g, b;
-        if (this.baseColor.startsWith('#')) {
-            r = parseInt(this.baseColor.slice(1, 3), 16);
-            g = parseInt(this.baseColor.slice(3, 5), 16);
-            b = parseInt(this.baseColor.slice(5, 7), 16);
+        if (this.rainbow) {
+            // Use HSL for smooth rainbow effect
+            ctx.fillStyle = `hsla(${this.hueOffset}, 100%, 60%, ${alpha})`;
         } else {
-            r = 200;
-            g = 200;
-            b = 200;
+            // Use regular RGB color
+            let r, g, b;
+            if (this.baseColor.startsWith('#')) {
+                r = parseInt(this.baseColor.slice(1, 3), 16);
+                g = parseInt(this.baseColor.slice(3, 5), 16);
+                b = parseInt(this.baseColor.slice(5, 7), 16);
+            } else {
+                r = 200;
+                g = 200;
+                b = 200;
+            }
+            
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
         
-        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
         ctx.beginPath();
         ctx.arc(this.pos.x, this.pos.y, this.size, 0, Math.PI * 2);
         ctx.fill();
@@ -331,7 +363,8 @@ class ParticleSystem {
             brightness: 0.3,
             speed: 0.2,
             size: 2,
-            spawnRate: 0.1
+            spawnRate: 0.1,
+            rainbow: false
         };
         
         this.init();
@@ -361,7 +394,8 @@ class ParticleSystem {
             brightness: emotionData.brightness,
             speed: emotionData.speed,
             size: emotionData.size || 2,
-            spawnRate: emotionData.spawnRate
+            spawnRate: emotionData.spawnRate,
+            rainbow: emotionData.rainbow || false
         };
     }
 
@@ -468,7 +502,8 @@ input.addEventListener('input', function() {
                 brightness: 0.3,
                 speed: 0.2,
                 size: 2,
-                spawnRate: 0.1
+                spawnRate: 0.1,
+                rainbow: false
             });
         }
         lastScrollHeight = 50;

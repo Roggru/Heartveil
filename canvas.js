@@ -660,5 +660,19 @@ const emotions = {
         spawnRate: 0.5,
         
         trail: TrailPresets.none
+    },
+
+    rainbow: {
+        keywords: [
+            'i am perfect'],
+        color: '#ffffff',
+        
+        rainbow: true,
+        intensity: 10,
+        brightness: 2,
+        speed: 1,
+        spawnRate: 3,
+        
+        trail: TrailPresets.none
     }
 };

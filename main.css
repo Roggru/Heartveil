@@ -16,6 +16,21 @@ body {
     align-items: center;
     
     transition: background-color 3s ease;}
+.canvas::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 1;
+    
+    background: 
+        linear-gradient(to bottom, #0f0f0f 0%, transparent 30px),
+        linear-gradient(to top, #0f0f0f 0%, transparent 30px),
+        linear-gradient(to right, #0f0f0f 0%, transparent 30px),
+        linear-gradient(to left, #0f0f0f 0%, transparent 30px);}
 .space{
     position: absolute;
     top: 0;
