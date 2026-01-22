@@ -15,7 +15,7 @@ body {
     justify-content: center;
     align-items: center;
     
-    transition: background-color 3s ease;}
+    transition: background-color 6s ease;}
 .canvas::before {
     content: '';
     position: absolute;

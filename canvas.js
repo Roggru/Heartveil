@@ -96,7 +96,7 @@
 //         intensity: 6
 //     },
 //     love_high: {
-//         keywords: ['passionate', 'infatuated', 'enamored', 'obsessed', 'smitten'],
+//         keywords: ['passionate', 'infatuated', 'enamored', 'obsessed'],
 //         color: '#C2185B',
 //         intensity: 9
 //     },
@@ -122,23 +122,70 @@
 
 const emotions = {
     // ======================
+    // Peaceful / Serene
+    // ======================
+    calm_low: {
+        keywords: [
+            'okay', 'fine',
+            'stable', 'settled'
+        ],
+        color: '#81C784',
+        
+        intensity: 1,
+        brightness: 0.4,
+        speed: 0.12,
+        spawnRate: 0.1,
+
+        trail: TrailPresets.none
+    },
+    calm_medium: {
+        keywords: [
+            'calm', 'peaceful',
+            'relaxed', 'tranquil',
+            'serene', 'at ease'
+        ],
+        color: '#66bb7b',
+        
+        intensity: 3,
+        brightness: 0.6,
+        speed: 0.15,
+        spawnRate: 0.12,
+
+        trail: TrailPresets.none
+    },
+    calm_high: {
+        keywords: [
+            'bliss',
+            'blissful', 'zenlike',
+            'harmonious', 'meditative'
+        ],
+        color: '#4cc78b',
+        
+        intensity: 6,
+        brightness: 0.8,
+        speed: 0.1,
+        spawnRate: 0.1,
+
+        trail: TrailPresets.none
+    },
+    // ======================
     // JOY / POSITIVE AFFECT
     // ======================
     joy_low: {
         roots: ['joy', 'contentment'],
         keywords: [
-            'okay', 'fine', 'pleasant', 'comfortable',
+            'pleasant', 'comfortable',
             'content', 'contented', 'contentment',
             'satisfied', 'satisfaction',
             'relieved', 'relief', 'good',
-            'lighthearted', 'at ease', 'serene'
+            'lighthearted'
         ],
         color: '#E6EE9C',
         
         intensity: 2,
         brightness: 0.4,
-        speed: 0.15,
-        spawnRate: 0.15,
+        speed: 0.2,
+        spawnRate: 0.12,
 
         trail: TrailPresets.none
     },
@@ -172,7 +219,6 @@ const emotions = {
             'euphoric', 'euphoria', 'ecstasy',
             'exuberant', 'exuberance',
             'thrilled', 'thrill',
-            'blissful', 'bliss',
             'excited', 'excitement',
             'overjoyed'
         ],
@@ -208,7 +254,7 @@ const emotions = {
         roots: ['affection'],
         keywords: [
             'fond', 'fondness',
-            'caring', 'care',
+            'caring', 'care', 'smitten',
             'appreciative', 'appreciation',
             'connected', 'connection', 'cherish'
         ],
@@ -455,7 +501,7 @@ const emotions = {
             'nightmarish',
             'petrified'
         ],
-        color: '#311B92',
+        color: '#4e2ce6',
         
         intensity: 10,
         brightness: 1,
@@ -515,7 +561,7 @@ const emotions = {
             'burned out', 'burnout',
             'hysteric', 'hysterical'
         ],
-        color: '#6A1B9A',
+        color: '#8021bb',
        
         intensity: 9,
         brightness: 1,
@@ -652,7 +698,7 @@ const emotions = {
             'empty', 'emptiness',
             'void'
         ],
-        color: '#111111',
+        color: '#0f0f0f',
 
         intensity: 1,
         brightness: 0.4,
@@ -665,7 +711,7 @@ const emotions = {
     rainbow: {
         keywords: [
             'i am perfect'],
-        color: '#ffffff',
+        color: '#0f0f0f',
         
         rainbow: true,
         intensity: 10,

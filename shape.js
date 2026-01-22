@@ -111,35 +111,32 @@ input.addEventListener('keydown', function(e) {
 
 
 
-// Perlin noise implementation
 class PerlinNoise {
     constructor() {
-        this.gradients = {};
-        this.memory = {};
+        this.gradients = new Map();
+        this.memory = new Map();
     }
 
     rand_vect() {
-        let theta = Math.random() * 2 * Math.PI;
+        let theta = Math.random() * 6.283185307179586;
         return { x: Math.cos(theta), y: Math.sin(theta) };
     }
 
     dot_prod_grid(x, y, vx, vy) {
-        let g_vect;
         let d_vect = { x: x - vx, y: y - vy };
         let grid_key = `${vx},${vy}`;
         
-        if (this.gradients[grid_key]) {
-            g_vect = this.gradients[grid_key];
-        } else {
+        let g_vect = this.gradients.get(grid_key);
+        if (!g_vect) {
             g_vect = this.rand_vect();
-            this.gradients[grid_key] = g_vect;
+            this.gradients.set(grid_key, g_vect);
         }
         
         return d_vect.x * g_vect.x + d_vect.y * g_vect.y;
     }
 
     smootherstep(x) {
-        return 6 * x ** 5 - 15 * x ** 4 + 10 * x ** 3;
+        return 6 * x * x * x * x * x - 15 * x * x * x * x + 10 * x * x * x;
     }
 
     interp(x, a, b) {
@@ -148,8 +145,9 @@ class PerlinNoise {
 
     get(x, y) {
         let key = `${x},${y}`;
-        if (this.memory[key]) {
-            return this.memory[key];
+        let cached = this.memory.get(key);
+        if (cached !== undefined) {
+            return cached;
         }
 
         let xf = Math.floor(x);
@@ -164,16 +162,26 @@ class PerlinNoise {
         let xb = this.interp(x - xf, bl, br);
         let v = this.interp(y - yf, xt, xb);
         
-        this.memory[key] = v;
+        this.memory.set(key, v);
         return v;
+    }
+    
+    clearOldCache() {
+        if (this.memory.size > 10000) {
+            const entries = Array.from(this.memory.entries());
+            const toKeep = entries.slice(-5000);
+            this.memory = new Map(toKeep);
+        }
     }
 }
 
-// Particle class
 class Particle {
     constructor(canvas, emotionData = null) {
         this.canvas = canvas;
-        
+        this.reset(emotionData);
+    }
+    
+    reset(emotionData = null) {
         const defaults = {
             color: '#C8C8C8',
             brightness: 0.3,
@@ -188,14 +196,24 @@ class Particle {
         this.size = emotionData?.size || defaults.size;
         this.rainbow = emotionData?.rainbow || defaults.rainbow;
 
+        if (!this.rainbow && this.baseColor.startsWith('#')) {
+            this.r = parseInt(this.baseColor.slice(1, 3), 16);
+            this.g = parseInt(this.baseColor.slice(3, 5), 16);
+            this.b = parseInt(this.baseColor.slice(5, 7), 16);
+        } else {
+            this.r = 200;
+            this.g = 200;
+            this.b = 200;
+        }
+
         if (this.rainbow) {
             this.hueOffset = Math.random() * 360;
             this.hueSpeed = 0.5;
         }
         
         this.pos = {
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height
+            x: Math.random() * this.canvas.width,
+            y: Math.random() * this.canvas.height
         };
         this.vel = { x: 0, y: 0 };
         this.acc = { x: 0, y: 0 };
@@ -204,6 +222,7 @@ class Particle {
         this.age = 0;
         this.fadeInDuration = 60;
         this.fadeOutDuration = 100;
+        this.active = true;
     }
 
     follow(flowfield, cols, scl) {
@@ -218,16 +237,9 @@ class Particle {
         
         if (force) {
             let forceMultiplier = 0.05 * (this.maxSpeed / 0.5);
-            this.applyForce({ 
-                x: force.x * forceMultiplier,
-                y: force.y * forceMultiplier
-            });
+            this.acc.x += force.x * forceMultiplier;
+            this.acc.y += force.y * forceMultiplier;
         }
-    }
-
-    applyForce(force) {
-        this.acc.x += force.x;
-        this.acc.y += force.y;
     }
 
     update() {
@@ -237,8 +249,11 @@ class Particle {
         this.vel.x *= this.friction;
         this.vel.y *= this.friction;
         
-        let mag = Math.sqrt(this.vel.x ** 2 + this.vel.y ** 2);
-        if (mag > this.maxSpeed) {
+        let magSq = this.vel.x * this.vel.x + this.vel.y * this.vel.y;
+        let maxSpeedSq = this.maxSpeed * this.maxSpeed;
+        
+        if (magSq > maxSpeedSq) {
+            let mag = Math.sqrt(magSq);
             this.vel.x = (this.vel.x / mag) * this.maxSpeed;
             this.vel.y = (this.vel.y / mag) * this.maxSpeed;
         }
@@ -262,16 +277,15 @@ class Particle {
         if (this.pos.x > this.canvas.width) {
             this.pos.x = 0;
             this.vel.x *= 0.5;
-        }
-        if (this.pos.x < 0) {
+        } else if (this.pos.x < 0) {
             this.pos.x = this.canvas.width;
             this.vel.x *= 0.5;
         }
+        
         if (this.pos.y > this.canvas.height) {
             this.pos.y = 0;
             this.vel.y *= 0.5;
-        }
-        if (this.pos.y < 0) {
+        } else if (this.pos.y < 0) {
             this.pos.y = this.canvas.height;
             this.vel.y *= 0.5;
         }
@@ -290,37 +304,23 @@ class Particle {
         
         let remainingLife = this.life - this.age;
         if (remainingLife < this.fadeOutDuration) {
-            let fadeOutAlpha = remainingLife / this.fadeOutDuration;
-            alpha = Math.min(alpha, fadeOutAlpha);
+            alpha = Math.min(alpha, remainingLife / this.fadeOutDuration);
         }
         
-        return alpha;
+        return alpha * this.baseBrightness;
     }
 
     show(ctx) {
-        let alpha = this.getAlpha() * this.baseBrightness;
+        let alpha = this.getAlpha();
         
         if (this.rainbow) {
-            // Use HSL for smooth rainbow effect
             ctx.fillStyle = `hsla(${this.hueOffset}, 100%, 60%, ${alpha})`;
         } else {
-            // Use regular RGB color
-            let r, g, b;
-            if (this.baseColor.startsWith('#')) {
-                r = parseInt(this.baseColor.slice(1, 3), 16);
-                g = parseInt(this.baseColor.slice(3, 5), 16);
-                b = parseInt(this.baseColor.slice(5, 7), 16);
-            } else {
-                r = 200;
-                g = 200;
-                b = 200;
-            }
-            
-            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            ctx.fillStyle = `rgba(${this.r}, ${this.g}, ${this.b}, ${alpha})`;
         }
         
         ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, this.size, 0, Math.PI * 2);
+        ctx.arc(this.pos.x, this.pos.y, this.size, 0, 6.283185307179586);
         ctx.fill();
     }
 }
@@ -334,7 +334,7 @@ class ParticleSystem {
             return;
         }
         
-        this.ctx = this.canvas.getContext('2d');
+        this.ctx = this.canvas.getContext('2d', { alpha: true });
         
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
@@ -349,7 +349,8 @@ class ParticleSystem {
         
         this.noise = new PerlinNoise();
         this.particles = [];
-        this.flowfield = [];
+        this.particlePool = [];
+        this.flowfield = new Array(this.cols * this.rows);
         
         this.seeds = {
             flow1: Math.random() * 10000,
@@ -357,6 +358,8 @@ class ParticleSystem {
         };
         
         this.time = 0;
+        this.flowfieldUpdateCounter = 0;
+        this.flowfieldUpdateFrequency = 1;
         
         this.currentEmotion = {
             color: '#C8C8C8',
@@ -377,7 +380,9 @@ class ParticleSystem {
         this.cols = Math.floor(this.canvas.width / this.scl);
         this.rows = Math.floor(this.canvas.height / this.scl);
         
+        this.flowfield = new Array(this.cols * this.rows);
         this.particles = [];
+        this.particlePool = [];
         this.init();
     }
 
@@ -385,6 +390,22 @@ class ParticleSystem {
         const targetCount = Math.floor(this.baseNumbPart * this.currentEmotion.spawnRate);
         for (let i = 0; i < targetCount; i++) {
             this.particles.push(new Particle(this.canvas, this.currentEmotion));
+        }
+    }
+    
+    getParticle(emotionData) {
+        if (this.particlePool.length > 0) {
+            const particle = this.particlePool.pop();
+            particle.reset(emotionData);
+            return particle;
+        }
+        return new Particle(this.canvas, emotionData);
+    }
+    
+    recycleParticle(particle) {
+        particle.active = false;
+        if (this.particlePool.length < 500) {
+            this.particlePool.push(particle);
         }
     }
     
@@ -399,13 +420,7 @@ class ParticleSystem {
         };
     }
 
-    update() {
-        if (window.updateFPS) {
-            window.updateFPS();
-        }
-        
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        
+    updateFlowfield() {
         this.time += this.zOffInc;
         
         let yoff = 0;
@@ -424,18 +439,30 @@ class ParticleSystem {
                     yoff * 2 + this.seeds.flow2 + this.time * 0.7
                 );
                 
-                let angle = (n1 * 2 + n2 * 0.5) * Math.PI * 2;
-                angle -= 0.05;
+                let angle = (n1 * 2 + n2 * 0.5) * 6.283185307179586 - 0.05;
                 
-                let v = {
+                this.flowfield[index] = {
                     x: Math.cos(angle),
                     y: Math.sin(angle)
                 };
                 
-                this.flowfield[index] = v;
                 xoff += this.inc;
             }
             yoff += this.inc;
+        }
+    }
+
+    update() {
+        if (window.updateFPS) {
+            window.updateFPS();
+        }
+        
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        this.flowfieldUpdateCounter++;
+        if (this.flowfieldUpdateCounter >= this.flowfieldUpdateFrequency) {
+            this.updateFlowfield();
+            this.flowfieldUpdateCounter = 0;
         }
         
         for (let i = this.particles.length - 1; i >= 0; i--) {
@@ -447,17 +474,21 @@ class ParticleSystem {
             particle.show(this.ctx);
             
             if (particle.isDead()) {
+                this.recycleParticle(particle);
                 this.particles.splice(i, 1);
             }
         }
         
         const targetCount = Math.floor(this.baseNumbPart * this.currentEmotion.spawnRate);
-
         if (this.particles.length < targetCount) {
-            const spawnCount = Math.min(10, targetCount - this.particles.length);
+            const spawnCount = Math.min(5, targetCount - this.particles.length);
             for (let i = 0; i < spawnCount; i++) {
-                this.particles.push(new Particle(this.canvas, this.currentEmotion));
+                this.particles.push(this.getParticle(this.currentEmotion));
             }
+        }
+
+        if (this.flowfieldUpdateCounter % 300 === 0) {
+            this.noise.clearOldCache();
         }
 
         requestAnimationFrame(() => this.update());
@@ -488,6 +519,11 @@ input.addEventListener('input', function() {
             window.updateTextboxColor(emotion);
         }
         
+        if (emotion && emotion.color) {
+            const subtleColor = blendEmotionColorWithBackground(emotion.color, 0.02);
+            canvas.style.backgroundColor = subtleColor;
+        }
+        
         if (particleSystem) {
             particleSystem.setEmotion(emotion);
         }
@@ -495,6 +531,8 @@ input.addEventListener('input', function() {
         if (window.updateTextboxColor) {
             window.updateTextboxColor(null);
         }
+        
+        canvas.style.backgroundColor = '#0f0f0f';
         
         if (particleSystem) {
             particleSystem.setEmotion({
@@ -521,6 +559,24 @@ input.addEventListener('input', function() {
         }, 500);
     }
 });
+
+function blendEmotionColorWithBackground(emotionColor, intensity = 0.10) {
+    // Parse emotion color
+    const hex = emotionColor.replace('#', '');
+    let r = parseInt(hex.substring(0, 2), 16);
+    let g = parseInt(hex.substring(2, 4), 16);
+    let b = parseInt(hex.substring(4, 6), 16);
+    
+    // Background color RGB
+    const bgR = 15, bgG = 15, bgB = 15; // #0f0f0f
+    
+    // Blend emotion color with background (intensity controls how strong the tint is)
+    r = Math.round(bgR + (r - bgR) * intensity);
+    g = Math.round(bgG + (g - bgG) * intensity);
+    b = Math.round(bgB + (b - bgB) * intensity);
+    
+    return `rgb(${r}, ${g}, ${b})`;
+}
 
 window.addEventListener('load', () => {
     particleSystem = new ParticleSystem('space');
