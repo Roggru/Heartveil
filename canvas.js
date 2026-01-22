@@ -201,7 +201,7 @@ const emotions = {
             'glad', 'delighted', 'delight',
             'pleased', 'pleasure',
             'warm', 'warmth', 'joy',
-            'optimistic'
+            'optimistic', 'proud'
         ],
         color: '#FFD54F',
         

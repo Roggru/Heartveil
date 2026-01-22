@@ -190,6 +190,40 @@ input.addEventListener('keydown', function(e) {
     }
 });
 
+function interpolateColors(colors, phase) {
+    if (colors.length === 0) return { r: 200, g: 200, b: 200 };
+    if (colors.length === 1) {
+        const hex = colors[0].replace('#', '');
+        return {
+            r: parseInt(hex.substring(0, 2), 16),
+            g: parseInt(hex.substring(2, 4), 16),
+            b: parseInt(hex.substring(4, 6), 16)
+        };
+    }
+    
+    const scaledPhase = phase * colors.length;
+    const index1 = Math.floor(scaledPhase) % colors.length;
+    const index2 = (index1 + 1) % colors.length;
+    const localPhase = scaledPhase - Math.floor(scaledPhase);
+
+    const hex1 = colors[index1].replace('#', '');
+    const hex2 = colors[index2].replace('#', '');
+    
+    const r1 = parseInt(hex1.substring(0, 2), 16);
+    const g1 = parseInt(hex1.substring(2, 4), 16);
+    const b1 = parseInt(hex1.substring(4, 6), 16);
+    
+    const r2 = parseInt(hex2.substring(0, 2), 16);
+    const g2 = parseInt(hex2.substring(2, 4), 16);
+    const b2 = parseInt(hex2.substring(4, 6), 16);
+    
+    return {
+        r: Math.round(r1 + (r2 - r1) * localPhase),
+        g: Math.round(g1 + (g2 - g1) * localPhase),
+        b: Math.round(b1 + (b2 - b1) * localPhase)
+    };
+}
+
 class PerlinNoise {
     constructor() {
         this.gradients = new Map();
@@ -266,7 +300,10 @@ class Particle {
             brightness: 0.3,
             speed: 0.3,
             size: 2,
-            rainbow: false
+            rainbow: false,
+            colorCycle: false,
+            cycleColors: [],
+            cycleSpeed: 0.015
         };
         
         this.baseColor = emotionData?.color || defaults.color;
@@ -275,7 +312,11 @@ class Particle {
         this.size = emotionData?.size || defaults.size;
         this.rainbow = emotionData?.rainbow || defaults.rainbow;
 
-        if (!this.rainbow && this.baseColor.startsWith('#')) {
+        this.colorCycle = emotionData?.colorCycle || defaults.colorCycle;
+        this.cycleColors = emotionData?.cycleColors || defaults.cycleColors;
+        this.cycleSpeed = emotionData?.cycleSpeed || defaults.cycleSpeed;
+
+        if (!this.rainbow && !this.colorCycle && this.baseColor.startsWith('#')) {
             this.r = parseInt(this.baseColor.slice(1, 3), 16);
             this.g = parseInt(this.baseColor.slice(3, 5), 16);
             this.b = parseInt(this.baseColor.slice(5, 7), 16);
@@ -288,6 +329,10 @@ class Particle {
         if (this.rainbow) {
             this.hueOffset = Math.random() * 360;
             this.hueSpeed = 0.5;
+        }
+        
+        if (this.colorCycle && this.cycleColors.length > 0) {
+            this.cyclePhase = Math.random();
         }
         
         this.pos = {
@@ -350,7 +395,17 @@ class Particle {
         if (this.rainbow) {
             this.hueOffset = (this.hueOffset + this.hueSpeed) % 360;
         }
+        
+        if (this.colorCycle && this.cycleColors.length > 0) {
+            this.cyclePhase = (this.cyclePhase + this.cycleSpeed) % 1;
+            
+            const rgb = interpolateColors(this.cycleColors, this.cyclePhase);
+            this.r = rgb.r;
+            this.g = rgb.g;
+            this.b = rgb.b;
+        }
     }
+
 
     edges() {
         if (this.pos.x > this.canvas.width) {
@@ -440,7 +495,6 @@ class ParticleSystem {
         this.flowfieldUpdateCounter = 0;
         this.flowfieldUpdateFrequency = 1;
         
-        // MODIFIED: Now using emotion distribution instead of single emotion
         this.emotionDistribution = [{
             config: {
                 color: '#C8C8C8',
@@ -454,8 +508,7 @@ class ParticleSystem {
             type: 'pure',
             emotion: 'neutral'
         }];
-        
-        // Keep currentEmotion for backward compatibility
+
         this.currentEmotion = this.emotionDistribution[0].config;
         
         this.init();
@@ -475,7 +528,6 @@ class ParticleSystem {
     }
 
     init() {
-        // MODIFIED: Initialize particles from distribution
         this.emotionDistribution.forEach(dist => {
             const targetCount = Math.floor(dist.count);
             for (let i = 0; i < targetCount; i++) {
@@ -500,10 +552,8 @@ class ParticleSystem {
         }
     }
     
-    // NEW: Set emotions with distribution (primary method)
     setEmotions(emotionAnalysis) {
         if (!emotionAnalysis || !emotionAnalysis.all) {
-            // Reset to neutral
             this.emotionDistribution = [{
                 config: {
                     color: '#C8C8C8',

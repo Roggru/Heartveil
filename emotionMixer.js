@@ -4,13 +4,9 @@ class EmotionMixer {
         this.emotionsData = emotions;
         this.detectionThreshold = 0.8;
         this.mixingEnabled = true;
+        this.mixedParticleRatio = 0.7; // 65% mixed, 35% pure (adjustable: 0.6-0.7 recommended)
     }
 
-    /**
-     * Analyzes text and returns all detected emotions with their scores
-     * @param {string} text - Input text to analyze
-     * @returns {Array} Array of {emotion, score, data} sorted by score
-     */
     detectEmotions(text) {
         const lowerText = text.toLowerCase();
         const emotionScores = {};
@@ -54,21 +50,17 @@ class EmotionMixer {
             : [{ emotion: 'neutral', score: 1, data: this.emotionsData.neutral }];
     }
 
-    /**
-     * Blends two emotion configurations
-     * @param {Object} emotion1 - First emotion data
-     * @param {Object} emotion2 - Second emotion data
-     * @param {number} ratio - Blend ratio (0 = full emotion1, 1 = full emotion2)
-     * @returns {Object} Blended emotion configuration
-     */
     blendEmotions(emotion1, emotion2, ratio = 0.5) {
         const blended = {
-            color: this.blendColors(emotion1.color, emotion2.color, ratio),
+            color: emotion1.color,
             brightness: this.lerp(emotion1.brightness, emotion2.brightness, ratio),
             speed: this.lerp(emotion1.speed, emotion2.speed, ratio),
             size: this.lerp(emotion1.size || 2, emotion2.size || 2, ratio),
             spawnRate: this.lerp(emotion1.spawnRate, emotion2.spawnRate, ratio),
             rainbow: emotion1.rainbow || emotion2.rainbow,
+            colorCycle: !emotion1.rainbow && !emotion2.rainbow,
+            cycleColors: [emotion1.color, emotion2.color],
+            cycleSpeed: 0.004, // Speed of color transition
             mixed: true,
             sources: [emotion1, emotion2]
         };
@@ -76,19 +68,14 @@ class EmotionMixer {
         return blended;
     }
 
-    /**
-     * Blends multiple emotions with weighted ratios
-     * @param {Array} emotions - Array of {emotion, score, data}
-     * @returns {Object} Blended emotion configuration
-     */
     blendMultipleEmotions(emotions) {
         if (emotions.length === 1) return emotions[0].data;
 
         const totalScore = emotions.reduce((sum, e) => sum + e.score, 0);
         
-        let totalR = 0, totalG = 0, totalB = 0;
         let totalBrightness = 0, totalSpeed = 0, totalSize = 0, totalSpawnRate = 0;
         let hasRainbow = false;
+        let cycleColors = [];
 
         emotions.forEach(({ score, data }) => {
             const weight = score / totalScore;
@@ -96,10 +83,7 @@ class EmotionMixer {
             if (data.rainbow) {
                 hasRainbow = true;
             } else {
-                const rgb = this.hexToRgb(data.color);
-                totalR += rgb.r * weight;
-                totalG += rgb.g * weight;
-                totalB += rgb.b * weight;
+                cycleColors.push(data.color);
             }
             
             totalBrightness += data.brightness * weight;
@@ -108,28 +92,21 @@ class EmotionMixer {
             totalSpawnRate += data.spawnRate * weight;
         });
 
-        const blendedColor = hasRainbow 
-            ? '#FFFFFF' 
-            : this.rgbToHex(Math.round(totalR), Math.round(totalG), Math.round(totalB));
-
         return {
-            color: blendedColor,
+            color: cycleColors[0] || '#FFFFFF',
             brightness: totalBrightness,
             speed: totalSpeed,
             size: totalSize,
             spawnRate: totalSpawnRate,
             rainbow: hasRainbow,
+            colorCycle: !hasRainbow && cycleColors.length > 1,
+            cycleColors: cycleColors,
+            cycleSpeed: 0.015, // Speed of color transition
             mixed: emotions.length > 1,
             sources: emotions.map(e => e.data)
         };
     }
 
-    /**
-     * Calculates particle distribution across detected emotions
-     * @param {Array} detectedEmotions - Array of {emotion, score, data}
-     * @param {number} totalParticles - Total number of particles to distribute
-     * @returns {Array} Array of {config, count} for each particle type
-     */
     calculateDistribution(detectedEmotions, totalParticles = 1500) {
         if (detectedEmotions.length === 0) {
             const neutralConfig = this.emotionsData.neutral;
@@ -161,7 +138,7 @@ class EmotionMixer {
 
         const effectiveTotal = totalParticles * weightedSpawnRate;
 
-        const mixedReserve = this.mixingEnabled ? 0.3 : 0;
+        const mixedReserve = this.mixingEnabled ? this.mixedParticleRatio : 0;
         const pureReserve = 1 - mixedReserve;
 
         detectedEmotions.forEach(({ emotion, score, data }) => {
@@ -179,12 +156,10 @@ class EmotionMixer {
         });
 
         if (this.mixingEnabled && detectedEmotions.length >= 2) {
-
             const topEmotions = detectedEmotions.slice(0, Math.min(3, detectedEmotions.length));
             const mixedCount = Math.floor(effectiveTotal * mixedReserve);
 
             if (topEmotions.length === 2) {
-
                 const blended = this.blendEmotions(topEmotions[0].data, topEmotions[1].data, 0.5);
                 distribution.push({
                     config: blended,
@@ -193,7 +168,6 @@ class EmotionMixer {
                     emotion: `${topEmotions[0].emotion}+${topEmotions[1].emotion}`
                 });
             } else {
-
                 const blended = this.blendMultipleEmotions(topEmotions);
                 distribution.push({
                     config: blended,
@@ -240,6 +214,10 @@ class EmotionMixer {
 
     setMixingEnabled(enabled) {
         this.mixingEnabled = enabled;
+    }
+    
+    setMixedParticleRatio(ratio) {
+        this.mixedParticleRatio = Math.max(0, Math.min(1, ratio));
     }
 }
 
