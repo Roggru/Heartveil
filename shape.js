@@ -7,6 +7,11 @@ const canvas = document.querySelector('.canvas');
 let hasStartedTyping = false;
 let resizeTimeout;
 let lastScrollHeight = 50;
+let emotionMixer;
+
+if (typeof EmotionMixer !== 'undefined') {
+    emotionMixer = new EmotionMixer(emotions);
+}
 
 // TYPING FLOW AGITATION
 class TypingFlowController {
@@ -69,46 +74,58 @@ class TypingFlowController {
 const typingFlow = new TypingFlowController();
 
 function analyzeText(text) {
-    const lowerText = text.toLowerCase();
-    
-    const emotionScores = {};
-    
-    for (let [emotion, data] of Object.entries(emotions)) {
-        data.keywords.forEach(keyword => {
-            if (keyword.includes(' ')) {
-                if (lowerText.includes(keyword)) {
-                    emotionScores[emotion] = (emotionScores[emotion] || 0) + (data.intensity * 3);
-                }
-            }
-        });
-    }
-    
-    const words = lowerText
-        .replace(/[.,!?;:"'()]/g, ' ')
-        .split(/\s+/)
-        .filter(word => word.length > 0);
-    
-    words.forEach(word => {
+    if (emotionMixer) {
+        const detectedEmotions = emotionMixer.detectEmotions(text);
+        
+        return {
+            dominant: detectedEmotions[0].data,
+            all: detectedEmotions
+        };
+    } else {
+
+        const lowerText = text.toLowerCase();
+        const emotionScores = {};
+        
         for (let [emotion, data] of Object.entries(emotions)) {
             data.keywords.forEach(keyword => {
-                if (!keyword.includes(' ') && keyword === word) {
-                    emotionScores[emotion] = (emotionScores[emotion] || 0) + data.intensity;
+                if (keyword.includes(' ')) {
+                    if (lowerText.includes(keyword)) {
+                        emotionScores[emotion] = (emotionScores[emotion] || 0) + (data.intensity * 3);
+                    }
                 }
             });
         }
-    });
-    
-    let dominantEmotion = 'neutral';
-    let maxScore = 0;
-    
-    for (let [emotion, score] of Object.entries(emotionScores)) {
-        if (score > maxScore) {
-            maxScore = score;
-            dominantEmotion = emotion;
+        
+        const words = lowerText
+            .replace(/[.,!?;:"'()]/g, ' ')
+            .split(/\s+/)
+            .filter(word => word.length > 0);
+        
+        words.forEach(word => {
+            for (let [emotion, data] of Object.entries(emotions)) {
+                data.keywords.forEach(keyword => {
+                    if (!keyword.includes(' ') && keyword === word) {
+                        emotionScores[emotion] = (emotionScores[emotion] || 0) + data.intensity;
+                    }
+                });
+            }
+        });
+        
+        let dominantEmotion = 'neutral';
+        let maxScore = 0;
+        
+        for (let [emotion, score] of Object.entries(emotionScores)) {
+            if (score > maxScore) {
+                maxScore = score;
+                dominantEmotion = emotion;
+            }
         }
+        
+        return {
+            dominant: emotions[dominantEmotion],
+            all: [{ emotion: dominantEmotion, score: maxScore, data: emotions[dominantEmotion] }]
+        };
     }
-    
-    return emotions[dominantEmotion];
 }
 
 function smoothResize() {
@@ -305,7 +322,6 @@ class Particle {
     }
 
     update(speedMultiplier = 1.0) {
-        // Apply speed multiplier to acceleration and velocity
         this.vel.x += this.acc.x * speedMultiplier;
         this.vel.y += this.acc.y * speedMultiplier;
         
@@ -404,7 +420,7 @@ class ParticleSystem {
         
         this.scl = 40;
         this.inc = 0.03;
-        this.zOffInc = 0.0005; // Base flow speed
+        this.zOffInc = 0.0005;
         this.baseNumbPart = 1500;
         
         this.cols = Math.floor(this.canvas.width / this.scl);
@@ -424,14 +440,23 @@ class ParticleSystem {
         this.flowfieldUpdateCounter = 0;
         this.flowfieldUpdateFrequency = 1;
         
-        this.currentEmotion = {
-            color: '#C8C8C8',
-            brightness: 0.3,
-            speed: 0.2,
-            size: 2,
-            spawnRate: 0.1,
-            rainbow: false
-        };
+        // MODIFIED: Now using emotion distribution instead of single emotion
+        this.emotionDistribution = [{
+            config: {
+                color: '#C8C8C8',
+                brightness: 0.3,
+                speed: 0.2,
+                size: 2,
+                spawnRate: 0.1,
+                rainbow: false
+            },
+            count: this.baseNumbPart * 0.1,
+            type: 'pure',
+            emotion: 'neutral'
+        }];
+        
+        // Keep currentEmotion for backward compatibility
+        this.currentEmotion = this.emotionDistribution[0].config;
         
         this.init();
         window.addEventListener('resize', () => this.resize());
@@ -450,10 +475,13 @@ class ParticleSystem {
     }
 
     init() {
-        const targetCount = Math.floor(this.baseNumbPart * this.currentEmotion.spawnRate);
-        for (let i = 0; i < targetCount; i++) {
-            this.particles.push(new Particle(this.canvas, this.currentEmotion));
-        }
+        // MODIFIED: Initialize particles from distribution
+        this.emotionDistribution.forEach(dist => {
+            const targetCount = Math.floor(dist.count);
+            for (let i = 0; i < targetCount; i++) {
+                this.particles.push(new Particle(this.canvas, dist.config));
+            }
+        });
     }
     
     getParticle(emotionData) {
@@ -472,6 +500,44 @@ class ParticleSystem {
         }
     }
     
+    // NEW: Set emotions with distribution (primary method)
+    setEmotions(emotionAnalysis) {
+        if (!emotionAnalysis || !emotionAnalysis.all) {
+            // Reset to neutral
+            this.emotionDistribution = [{
+                config: {
+                    color: '#C8C8C8',
+                    brightness: 0.3,
+                    speed: 0.2,
+                    size: 2,
+                    spawnRate: 0.1,
+                    rainbow: false
+                },
+                count: this.baseNumbPart * 0.1,
+                type: 'pure',
+                emotion: 'neutral'
+            }];
+            this.currentEmotion = this.emotionDistribution[0].config;
+            return;
+        }
+
+        if (emotionMixer) {
+            this.emotionDistribution = emotionMixer.calculateDistribution(
+                emotionAnalysis.all,
+                this.baseNumbPart
+            );
+        } else {
+            this.emotionDistribution = [{
+                config: emotionAnalysis.dominant,
+                count: this.baseNumbPart * emotionAnalysis.dominant.spawnRate,
+                type: 'pure',
+                emotion: 'dominant'
+            }];
+        }
+        
+        this.currentEmotion = emotionAnalysis.dominant;
+    }
+    
     setEmotion(emotionData) {
         this.currentEmotion = {
             color: emotionData.color,
@@ -481,6 +547,27 @@ class ParticleSystem {
             spawnRate: emotionData.spawnRate,
             rainbow: emotionData.rainbow || false
         };
+
+        this.emotionDistribution = [{
+            config: this.currentEmotion,
+            count: this.baseNumbPart * this.currentEmotion.spawnRate,
+            type: 'pure',
+            emotion: 'manual'
+        }];
+    }
+
+    getRandomEmotionFromDistribution() {
+        const totalCount = this.emotionDistribution.reduce((sum, dist) => sum + dist.count, 0);
+        let random = Math.random() * totalCount;
+        
+        for (let dist of this.emotionDistribution) {
+            random -= dist.count;
+            if (random <= 0) {
+                return dist.config;
+            }
+        }
+
+        return this.emotionDistribution[0].config;
     }
 
     updateFlowfield(speedMultiplier = 1.0) {
@@ -519,6 +606,10 @@ class ParticleSystem {
         if (window.updateFPS) {
             window.updateFPS();
         }
+      
+        if (window.updateParticleCount) {
+            window.updateParticleCount(this.particles.length);
+        }
 
         typingFlow.update();
         const speedMultiplier = typingFlow.getSpeedMultiplier();
@@ -545,14 +636,20 @@ class ParticleSystem {
                 this.particles.splice(i, 1);
             }
         }
-        
-        const baseTargetCount = Math.floor(this.baseNumbPart * this.currentEmotion.spawnRate);
-        const targetCount = Math.floor(baseTargetCount * spawnMultiplier);
-        
-        if (this.particles.length < targetCount) {
-            const spawnCount = Math.min(5, targetCount - this.particles.length);
+
+        let totalTargetCount = 0;
+        this.emotionDistribution.forEach(dist => {
+            const baseCount = Math.floor(dist.count);
+            const targetCount = Math.floor(baseCount * spawnMultiplier);
+            totalTargetCount += targetCount;
+        });
+
+        if (this.particles.length < totalTargetCount) {
+            const spawnCount = Math.min(5, totalTargetCount - this.particles.length);
+
             for (let i = 0; i < spawnCount; i++) {
-                this.particles.push(this.getParticle(this.currentEmotion));
+                const emotionConfig = this.getRandomEmotionFromDistribution();
+                this.particles.push(this.getParticle(emotionConfig));
             }
         }
 
@@ -569,6 +666,7 @@ class ParticleSystem {
 }
 
 let particleSystem;
+
 input.addEventListener('input', function() {
     const text = this.textContent;
 
@@ -582,19 +680,20 @@ input.addEventListener('input', function() {
     }, 50);
     
     if (text.length > 0) {
-        const emotion = analyzeText(text);
+        const emotionAnalysis = analyzeText(text);
+        const dominantEmotion = emotionAnalysis.dominant;
         
         if (window.updateTextboxColor) {
-            window.updateTextboxColor(emotion);
+            window.updateTextboxColor(dominantEmotion);
         }
         
-        if (emotion && emotion.color) {
-            const subtleColor = blendEmotionColorWithBackground(emotion.color, 0.02);
+        if (dominantEmotion && dominantEmotion.color) {
+            const subtleColor = blendEmotionColorWithBackground(dominantEmotion.color, 0.02);
             canvas.style.backgroundColor = subtleColor;
         }
         
         if (particleSystem) {
-            particleSystem.setEmotion(emotion);
+            particleSystem.setEmotions(emotionAnalysis);
         }
     } else {
         if (window.updateTextboxColor) {
@@ -604,14 +703,7 @@ input.addEventListener('input', function() {
         canvas.style.backgroundColor = '#0f0f0f';
         
         if (particleSystem) {
-            particleSystem.setEmotion({
-                color: '#C8C8C8',
-                brightness: 0.3,
-                speed: 0.2,
-                size: 2,
-                spawnRate: 0.1,
-                rainbow: false
-            });
+            particleSystem.setEmotions(null);
         }
         lastScrollHeight = 50;
     }

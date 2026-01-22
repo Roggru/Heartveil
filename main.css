@@ -199,11 +199,22 @@ body {
 .toggle-container input[type="checkbox"]:checked + .toggle-slider::after {
     transform: translateX(20px);}
 
+
+.particle-counter{
+    position: fixed;
+    bottom: 15px;
+    left: 120px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 1rem;
+    z-index: 99;
+    pointer-events: none;}
 .fps-counter {
     position: fixed;
     bottom: 15px;
     left: 15px;
-    background-color: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.7);
     padding: 0.5rem 1rem;
     border-radius: 4px;
     font-size: 1rem;

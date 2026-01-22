@@ -129,7 +129,7 @@ const emotions = {
             'okay', 'fine',
             'stable', 'settled'
         ],
-        color: '#81C784',
+        color: '#74b677',
         
         intensity: 1,
         brightness: 0.4,
@@ -138,11 +138,14 @@ const emotions = {
 
         trail: TrailPresets.none
     },
+
     calm_medium: {
         keywords: [
             'calm', 'peaceful',
             'relaxed', 'tranquil',
-            'serene', 'at ease'
+            'serene', 'at ease',
+            'satisfied', 'satisfaction',
+            'at peace'
         ],
         color: '#66bb7b',
         
@@ -153,6 +156,7 @@ const emotions = {
 
         trail: TrailPresets.none
     },
+
     calm_high: {
         keywords: [
             'bliss',
@@ -172,11 +176,9 @@ const emotions = {
     // JOY / POSITIVE AFFECT
     // ======================
     joy_low: {
-        roots: ['joy', 'contentment'],
         keywords: [
             'pleasant', 'comfortable',
             'content', 'contented', 'contentment',
-            'satisfied', 'satisfaction',
             'relieved', 'relief', 'good',
             'lighthearted'
         ],
@@ -191,7 +193,6 @@ const emotions = {
     },
 
     joy_medium: {
-        roots: ['happiness'],
         keywords: [
             'happy', 'happier', 'happiest',
             'happiness', 'joyous',
@@ -213,7 +214,6 @@ const emotions = {
     },
 
     joy_high: {
-        roots: ['ecstasy'],
         keywords: [
             'elated', 'elation',
             'euphoric', 'euphoria', 'ecstasy',
@@ -251,7 +251,6 @@ const emotions = {
     // ANGER / AGGRESSION
     // ======================
     anger_low: {
-        roots: ['annoyance'],
         keywords: [
             'annoyed', 'annoyance',
             'irritated', 'irritation',
@@ -270,7 +269,6 @@ const emotions = {
     },
 
     anger_medium: {
-        roots: ['anger'],
         keywords: [
             'angry', 'anger',
             'mad', 'hate',
@@ -289,7 +287,6 @@ const emotions = {
     },
 
     anger_high: {
-        roots: ['rage'],
         keywords: [
             'enraged', 'rage',
             'fury', 'livid',
@@ -328,7 +325,6 @@ const emotions = {
     // LOVE / ATTACHMENT
     // ======================
     love_low: {
-        roots: ['affection'],
         keywords: [
             'fond', 'fondness',
             'caring', 'care', 'smitten',
@@ -344,15 +340,27 @@ const emotions = {
         
         trail: TrailPresets.none
     },
-
-    love_medium: {
-        roots: ['love'],
+    
+    love_medium_one: {
         keywords: [
-            'love', 'loved', 'loving',
             'affectionate', 'affection',
             'tender', 'tenderness',
-            'devoted', 'devotion',
             'intimate', 'intimacy',
+        ],
+        color: '#e08ba8',
+        
+        intensity: 4,
+        brightness: 0.55,
+        speed: 0.1,
+        spawnRate: 0.25,
+        
+        trail: TrailPresets.none
+    },
+
+    love_medium_two: {
+        keywords: [
+            'love', 'loved', 'loving',
+            'devoted', 'devotion',
             'attached', 'attachment',
             'desire', 'romantic',
             'adore', 'adoration'
@@ -368,7 +376,6 @@ const emotions = {
     },
 
     love_high: {
-        roots: ['desire'],
         keywords: [
             'passionate', 'passion',
             'infatuated', 'infatuation',
@@ -391,7 +398,6 @@ const emotions = {
     // SADNESS / LOSS
     // ======================
     sadness_low: {
-        roots: ['disappointment'],
         keywords: [
             'down', 'blue',
             'disappointed', 'disappointment',
@@ -410,7 +416,6 @@ const emotions = {
     },
 
     sadness_medium: {
-        roots: ['sadness'],
         keywords: [
             'sad', 'sadness',
             'sorrowful', 'sorrow',
@@ -431,7 +436,6 @@ const emotions = {
     },
 
     sadness_high: {
-        roots: ['despair'],
         keywords: [
             'despairing', 'despair',
             'hopeless', 'hopelessness',
@@ -453,7 +457,6 @@ const emotions = {
     // FEAR / THREAT
     // ======================
     fear_low: {
-        roots: ['unease'],
         keywords: [
             'uneasy', 'uneasiness',
             'cautious', 'caution',
@@ -471,7 +474,6 @@ const emotions = {
     },
 
     fear_medium: {
-        roots: ['fear'],
         keywords: [
             'afraid', 'fearful', 'fear',
             'scared', 'scary',
@@ -491,7 +493,6 @@ const emotions = {
     },
 
     fear_high: {
-        roots: ['terror'],
         keywords: [
             'terrified', 'terror',
             'horrified', 'horror',
@@ -514,7 +515,6 @@ const emotions = {
     // ANXIETY / OVERLOAD
     // ======================
     anxiety_low: {
-        roots: ['concern'],
         keywords: [
             'concerned', 'concern',
             'uncertain', 'uncertainty',
@@ -532,7 +532,6 @@ const emotions = {
     },
 
     anxiety_medium: {
-        roots: ['anxiety'],
         keywords: [
             'anxious', 'anxiety',
             'stressed', 'stress',
@@ -551,7 +550,6 @@ const emotions = {
     },
 
     anxiety_high: {
-        roots: ['overwhelm'],
         keywords: [
             'overwhelmed', 'overwhelm',
             'spiraling',
@@ -574,7 +572,6 @@ const emotions = {
     // SURPRISE / NOVELTY
     // ======================
     surprise_low: {
-        roots: ['curiosity'],
         keywords: [
             'curious', 'curiosity',
             'caught off guard',
@@ -591,7 +588,6 @@ const emotions = {
     },
 
     surprise_medium: {
-        roots: ['surprise'],
         keywords: [
             'surprised', 'surprise',
             'amazed', 'amazement',
@@ -610,7 +606,6 @@ const emotions = {
     },
 
     surprise_high: {
-        roots: ['shock'],
         keywords: [
             'shocked', 'shock',
             'stunned',
@@ -632,7 +627,6 @@ const emotions = {
     // SHAME / SELF-EVALUATION
     // ======================
     shame_low: {
-        roots: ['embarrassment'],
         keywords: [
             'awkward', 'bad',
             'self-conscious',
@@ -649,7 +643,6 @@ const emotions = {
     },
 
     shame_medium: {
-        roots: ['guilt'],
         keywords: [
             'ashamed', 'shame',
             'guilty', 'guilt',
@@ -667,7 +660,6 @@ const emotions = {
     },
 
     shame_high: {
-        roots: ['humiliation'],
         keywords: [
             'humiliated', 'humiliation',
             'worthless',
@@ -688,7 +680,6 @@ const emotions = {
     // NEUTRAL / NUMB
     // ======================
     neutral: {
-        roots: ['neutrality'],
         keywords: [
             'neutral',
             'numb', 'numbness',

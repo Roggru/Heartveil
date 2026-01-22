@@ -49,6 +49,28 @@ window.updateFPS = updateFPS;
 
 
 
+// PARTICLE COUNTER
+const particleToggle = document.getElementById('particleToggle');
+const particleCounter = document.getElementById('particleCounter');
+
+let particleCounterEnabled = false;
+
+particleToggle.addEventListener('change', (e) => {
+    particleCounterEnabled = e.target.checked;
+    particleCounter.style.display = particleCounterEnabled ? 'block' : 'none';
+});
+
+function updateParticleCount(count) {
+    if (particleCounterEnabled) {
+        particleCounter.textContent = `${count} Particles`;
+    }
+}
+
+window.particleCounterEnabled = () => particleCounterEnabled;
+window.updateParticleCount = updateParticleCount;
+
+
+
 // COLOR TEXTBOX
 const textboxToggle = document.getElementById('textboxToggle');
 let colorTextboxEnabled = true;
